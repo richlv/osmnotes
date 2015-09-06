@@ -33,6 +33,11 @@ if (not @note_ids and not @bboxes) {
 	die;
 }
 
+if ($limit and not @bboxes) {
+	print "Limit specified, but no bounding boxes - only use --limit with at least one --bbox\n";
+	die;
+}
+
 my $non_integer = first {/\D/} @note_ids;
 if ($non_integer) {
 	print "Non-numeric node ID passed: '$non_integer'\n";
