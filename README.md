@@ -6,7 +6,7 @@ OpenStreetMap has notes that allow users to mark things in need for some improve
 
 General syntax is:
 ```
-perl osmnotes.pl --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT
+perl osmnotes.pl --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED
 ```
 
 It would connect to the OSM API and download requested individual notes and notes in specified bounding box. Any number of notes and bounding boxes can be specified. By default, the OSM limit on notes inside a bounding box is used, which is 100 at this time. It can be changed with the `--limit` parameter. Script output is to the standard output, save it to a file like this:
@@ -21,6 +21,8 @@ Multiple notes can be specified as multiple parameters or as a comma-delimited l
 perl osmnotes.pl --noteid 13,14
 perl osmnotes.pl --noteid 13 --noteid 14
 ```
+
+"Closed" specifies for how many days a note may be closed to still show it. OSM API default is 7. Setting it to 0 will not include closed notes. Setting it to -1 will include all notes, no matter how long ago they were closed.
 
 Bounding box must follow the [OSM notes API](http://wiki.openstreetmap.org/wiki/API_v0.6#Map_Notes_API) syntax of left,bottom,right,top. Multiple bounding boxes can be supplied. If the bounding boxes overlap, notes may appear several times in the output.
 

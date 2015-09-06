@@ -11,19 +11,22 @@ use List::Util 'first';
 my $single_note_url = 'http://api.openstreetmap.org/api/0.6/notes/';
 my $bbox_url        = 'http://api.openstreetmap.org/api/0.6/notes.json?bbox=';
 my $finalgpxversion = '1.0';
-my $usage_string    = "$0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT";
+my $usage_string    = "$0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED\n* closed: fow how long a note may be closed to still include it. OSM default - 7. 0 - do not include closed notes. -1 - inlude all closed notes";
 my $parsed_note_json;
 my $bboxnotes;
 my $limitstring;
+my $closedstring;
 
 # osm api default is 100, not specified here
 my @note_ids;
 my @bboxes;
 my $limit;
+my $closed;
 GetOptions(
     'noteid|n=s' => \@note_ids,
     'bbox|b=s' => \@bboxes,
     'limit|l=i' => \$limit,
+    'closed|c=i' => \$closed,
 ) or die "Usage: $usage_string\n";
 
 @note_ids = split(/,/,join(',',@note_ids));
@@ -35,6 +38,11 @@ if (not @note_ids and not @bboxes) {
 
 if ($limit and not @bboxes) {
 	print "Limit specified, but no bounding boxes - only use --limit with at least one --bbox\n";
+	die;
+}
+
+if ($closed and not @bboxes) {
+	print "Parameter 'closed' specified, but no bounding boxes - only use --closed with at least one --bbox\n";
 	die;
 }
 
@@ -111,9 +119,14 @@ if ($limit) {
 	$limitstring = "&limit=$limit";
 }
 
+if ($closed) {
+	$closedstring = "&closed=$closed";
+}
+
+
 foreach my $bbox (@bboxes) {
 	validate_bbox($bbox);
-	$parsed_note_json = decode_json(get($bbox_url . $bbox . $limitstring));
+	$parsed_note_json = decode_json(get($bbox_url . $bbox . $limitstring . $closedstring));
 	if ($parsed_note_json->{type} ne 'FeatureCollection') {
 		print "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
 		die;
