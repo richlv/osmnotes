@@ -5,16 +5,22 @@ OpenStreetMap has notes that allow users to mark things in need for some improve
 # Usage
 
 General syntax is:
+```
 perl osmnotes.pl --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT
+```
 
-It would connect to the OSM API and download requested individual notes and notes in specified bounding box. Any number of notes and bounding boxes can be specified. By default, the OSM limit on notes inside a bounding box is used, which is 100 at this time. It can be changed with the --limit parameter. Script output is to the standard output, save it to a file like this:
+It would connect to the OSM API and download requested individual notes and notes in specified bounding box. Any number of notes and bounding boxes can be specified. By default, the OSM limit on notes inside a bounding box is used, which is 100 at this time. It can be changed with the `--limit` parameter. Script output is to the standard output, save it to a file like this:
 
+```
 perl osmnotes.pl --noteid 13 > osm_note_13.gpx
+```
 
 Multiple notes can be specified as multiple parameters or as a comma-delimited list, so the following two are the same:
 
+```
 perl osmnotes.pl --noteid 13,14
 perl osmnotes.pl --noteid 13 --noteid 14
+```
 
 Bounding box must follow the [OSM notes API](http://wiki.openstreetmap.org/wiki/API_v0.6#Map_Notes_API) syntax of left,bottom,right,top. Multiple bounding boxes can be supplied. If the bounding boxes overlap, notes may appear several times in the output.
 
