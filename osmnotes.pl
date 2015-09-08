@@ -14,22 +14,39 @@ my $finalgpxversion = '1.0';
 my $usage_string    = "$0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED\n* closed: fow how long a note may be closed to still include it. OSM default - 7. 0 - do not include closed notes. -1 - inlude all closed notes";
 my $parsed_note_json;
 my $bboxnotes;
-my $limitstring;
-my $closedstring;
+my $limitstring = '';
+my $closedstring = '';
 
 # osm api default is 100, not specified here
 my @note_ids;
 my @bboxes;
-my $limit;
-my $closed;
+my ($limit, $closed);
+my ($topleft, $bottomright);
 GetOptions(
     'noteid|n=s' => \@note_ids,
     'bbox|b=s' => \@bboxes,
     'limit|l=i' => \$limit,
     'closed|c=i' => \$closed,
+    'topleft=s' => \$topleft,
+    'bottomright=s' => \$bottomright,
 ) or die "Usage: $usage_string\n";
 
 @note_ids = split(/,/,join(',',@note_ids));
+
+if ($topleft xor $bottomright) {
+	print "If either --topleft or --bottomright is specified, the other must be as well\n";
+	die;
+}
+
+if ($topleft and $bottomright) {
+	# from osm urls, generate and add a bounding box
+	my ($top, $left, $bottom, $right);
+	($top = $topleft) =~ s/.*#map=[0-9]+\/([0-9]+(\.[0-9]+)?).*/$1/;
+	($left = $topleft) =~ s/.*#map=[0-9]+\/[0-9]+(?:\.[0-9]+)?\/([0-9]+(\.[0-9]+)?).*/$1/;
+	($bottom = $bottomright) =~ s/.*#map=[0-9]+\/([0-9]+(\.[0-9]+)?).*/$1/;
+	($right = $bottomright) =~ s/.*#map=[0-9]+\/[0-9]+(?:\.[0-9]+)?\/([0-9]+(\.[0-9]+)?).*/$1/;
+	push @bboxes, "$left,$bottom,$right,$top";
+}
 
 if (not @note_ids and not @bboxes) {
 	print "Specify some note IDs and/or bounding boxes: $usage_string\n";
@@ -122,7 +139,6 @@ if ($limit) {
 if ($closed) {
 	$closedstring = "&closed=$closed";
 }
-
 
 foreach my $bbox (@bboxes) {
 	validate_bbox($bbox);
