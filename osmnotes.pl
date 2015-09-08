@@ -11,7 +11,15 @@ use List::Util 'first';
 my $single_note_url = 'http://api.openstreetmap.org/api/0.6/notes/';
 my $bbox_url        = 'http://api.openstreetmap.org/api/0.6/notes.json?bbox=';
 my $finalgpxversion = '1.0';
-my $usage_string    = "$0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED\n* closed: fow how long a note may be closed to still include it. OSM default - 7. 0 - do not include closed notes. -1 - inlude all closed notes";
+my $usage = <<"USAGE";
+$0 --noteid ID,ID,ID --noteid ID
+$0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED --topleft "TOPLEFT_MAPURL" --bottomright "BOTTOMRIGHT_MAPURL"
+  * bbox: bounding box using format left,bottom,right,top
+  * limit: maximum number of notes. OSM default - 100
+  * closed: for how long a note may be closed to still include it. OSM default - 7. 0 - do not include closed notes. -1 - inlude all closed notes
+  * topleft, topright: OSM URL of the top left and bottom right corner of the besired bounding box, correspondingly
+USAGE
+
 my $parsed_note_json;
 my $bboxnotes;
 my $limitstring = '';
@@ -29,7 +37,7 @@ GetOptions(
     'closed|c=i' => \$closed,
     'topleft=s' => \$topleft,
     'bottomright=s' => \$bottomright,
-) or die "Usage: $usage_string\n";
+) or die "Usage:\n$usage";
 
 @note_ids = split(/,/,join(',',@note_ids));
 
@@ -49,7 +57,7 @@ if ($topleft and $bottomright) {
 }
 
 if (not @note_ids and not @bboxes) {
-	print "Specify some note IDs and/or bounding boxes: $usage_string\n";
+	print "Specify some note IDs and/or bounding boxes. Usage:\n$usage";
 	die;
 }
 
