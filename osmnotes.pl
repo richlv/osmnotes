@@ -10,6 +10,7 @@ use List::Util 'first';
 
 my $single_note_url = 'http://api.openstreetmap.org/api/0.6/notes/';
 my $bbox_url        = 'http://api.openstreetmap.org/api/0.6/notes.json?bbox=';
+my $regionfile      = 'regions.json';
 my $finalgpxversion = '1.0';
 my $usage = <<"USAGE";
 $0 --noteid ID,ID,ID --noteid ID
@@ -17,7 +18,7 @@ $0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED --top
   * bbox: bounding box using format left,bottom,right,top
   * limit: maximum number of notes. OSM default - 100
   * closed: for how long a note may be closed to still include it. OSM default - 7. 0 - do not include closed notes. -1 - inlude all closed notes
-  * topleft, topright: OSM URL of the top left and bottom right corner of the besired bounding box, correspondingly
+  * topleft, bottomright: OSM URL of the top left and bottom right corner of the besired bounding box, correspondingly
 USAGE
 
 my $parsed_note_json;
@@ -28,15 +29,17 @@ my $closedstring = '';
 # osm api default is 100, not specified here
 my @note_ids;
 my @bboxes;
+my @regions;
 my ($limit, $closed);
 my ($topleft, $bottomright);
 GetOptions(
-    'noteid|n=s' => \@note_ids,
-    'bbox|b=s' => \@bboxes,
-    'limit|l=i' => \$limit,
-    'closed|c=i' => \$closed,
-    'topleft=s' => \$topleft,
+    'noteid|n=s'    => \@note_ids,
+    'bbox|b=s'      => \@bboxes,
+    'limit|l=i'     => \$limit,
+    'closed|c=i'    => \$closed,
+    'topleft=s'     => \$topleft,
     'bottomright=s' => \$bottomright,
+    'region|r=s'    => \@regions,
 ) or die "Usage:\n$usage";
 
 @note_ids = split(/,/,join(',',@note_ids));
@@ -140,17 +143,28 @@ foreach my $note_id (@note_ids) {
 	parse_note($parsed_note_json);
 }
 
-if ($limit) {
+if (@regions) {
+	my $fh;
+	open($fh, '<:raw', $regionfile) or die "Region specified, but can't open $regionfile";
+	my $known_regions = do { local $/; decode_json(<$fh>); };
+	close $fh;
+	foreach my $region (@regions) {
+		# TODO: look up region name in the list, add to bboxes if found, error out if not
+	}
+}
+
+if (defined $limit) {
 	$limitstring = "&limit=$limit";
 }
 
-if ($closed) {
+if (defined $closed) {
 	$closedstring = "&closed=$closed";
 }
 
 foreach my $bbox (@bboxes) {
 	validate_bbox($bbox);
-	$parsed_note_json = decode_json(get($bbox_url . $bbox . $limitstring . $closedstring));
+	my $bboxfinalurl = $bbox_url . $bbox . $limitstring . $closedstring;
+	$parsed_note_json = decode_json(get($bboxfinalurl));
 	if ($parsed_note_json->{type} ne 'FeatureCollection') {
 		print "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
 		die;
