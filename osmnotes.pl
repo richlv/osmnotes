@@ -129,7 +129,7 @@ sub validate_bbox {
 	my @bboxvalues = split(/,/,$bbox_to_validate);
 	my $bboxvalue_count = @bboxvalues;
 	if ($bboxvalue_count != '4') {
-		print "Bounding box '$bbox_to_validate' does not seem to have four comma-delimited parts";
+		print "Bounding box '$bbox_to_validate' does not seem to have four comma-delimited parts\n";
 		exit;
 	}
 	foreach my $bboxvalue (@bboxvalues) {
@@ -156,9 +156,9 @@ if (@regions) {
 	my $known_regions = do { local $/; decode_json(<$fh>); };
 	close $fh;
 	foreach my $region (@regions) {
-		my $matched_region = $known_regions->{$region};
-		if ($matched_region) {
-			push @bboxes, $matched_region;
+		my @matched_region = split(/'|'/,$known_regions->{$region});
+		if (@matched_region) {
+			push @bboxes, @matched_region;
 		}
 		else {
 			print "Region \"$region\" not found in file \"$regionfile\"\n";
