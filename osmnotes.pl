@@ -32,6 +32,7 @@ my @bboxes;
 my @regions;
 my ($limit, $closed);
 my ($topleft, $bottomright);
+my $help;
 GetOptions(
     'noteid|n=s'    => \@note_ids,
     'bbox|b=s'      => \@bboxes,
@@ -40,7 +41,12 @@ GetOptions(
     'topleft=s'     => \$topleft,
     'bottomright=s' => \$bottomright,
     'region|r=s'    => \@regions,
+    'help'          => \$help,
 ) or die "Usage:\n$usage";
+
+if ($help) {
+	die "Usage:\n$usage";
+}
 
 @note_ids = split(/,/,join(',',@note_ids));
 
