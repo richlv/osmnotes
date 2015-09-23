@@ -14,11 +14,12 @@ my $regionfile      = 'regions.json';
 my $finalgpxversion = '1.0';
 my $usage = <<"USAGE";
 $0 --noteid ID,ID,ID --noteid ID
-$0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED --topleft "TOPLEFT_MAPURL" --bottomright "BOTTOMRIGHT_MAPURL"
+$0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED --topleft "TOPLEFT_MAPURL" --bottomright "BOTTOMRIGHT_MAPURL" --region REGION
   * bbox: bounding box using format left,bottom,right,top
   * limit: maximum number of notes. OSM default - 100
   * closed: for how long a note may be closed to still include it. OSM default - 7. 0 - do not include closed notes. -1 - inlude all closed notes
-  * topleft, bottomright: OSM URL of the top left and bottom right corner of the besired bounding box, correspondingly
+  * topleft, bottomright: OSM URL of the top left and bottom right corner of the desired bounding box, correspondingly
+  * region: a predefined region from $regionfile
 USAGE
 
 my $parsed_note_json;
