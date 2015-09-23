@@ -42,17 +42,17 @@ GetOptions(
     'bottomright=s' => \$bottomright,
     'region|r=s'    => \@regions,
     'help'          => \$help,
-) or die "Usage:\n$usage";
+) or exit "Usage:\n$usage";
 
 if ($help) {
-	die "Usage:\n$usage";
+	exit "Usage:\n$usage";
 }
 
 @note_ids = split(/,/,join(',',@note_ids));
 
 if ($topleft xor $bottomright) {
 	print "If either --topleft or --bottomright is specified, the other must be as well\n";
-	die;
+	exit;
 }
 
 if ($topleft and $bottomright) {
@@ -65,25 +65,25 @@ if ($topleft and $bottomright) {
 	push @bboxes, "$left,$bottom,$right,$top";
 }
 
-if (not @note_ids and not @bboxes) {
+if (not @note_ids and not @bboxes and not @regions) {
 	print "Specify some note IDs and/or bounding boxes. Usage:\n$usage";
-	die;
+	exit;
 }
 
 if ($limit and not @bboxes) {
 	print "Limit specified, but no bounding boxes - only use --limit with at least one --bbox\n";
-	die;
+	exit;
 }
 
 if ($closed and not @bboxes) {
 	print "Parameter 'closed' specified, but no bounding boxes - only use --closed with at least one --bbox\n";
-	die;
+	exit;
 }
 
 my $non_integer = first {/\D/} @note_ids;
 if ($non_integer) {
 	print "Non-numeric node ID passed: '$non_integer'\n";
-	die;
+	exit;
 }
 
 my $final_gpx = XML::LibXML::Document->createDocument($finalgpxversion);
@@ -129,12 +129,12 @@ sub validate_bbox {
 	my $bboxvalue_count = @bboxvalues;
 	if ($bboxvalue_count != '4') {
 		print "Bounding box '$bbox_to_validate' does not seem to have four comma-delimited parts";
-		die;
+		exit;
 	}
 	foreach my $bboxvalue (@bboxvalues) {
 		if ($bboxvalue !~ /^[+-]?\d+\.?\d*\z/) {
 			print "$bboxvalue does not look like a proper decimal number\n";
-			die;
+			exit;
 		}
 	}
 }
@@ -144,18 +144,25 @@ foreach my $note_id (@note_ids) {
 #	print Dumper($parsed_note_json);
 	if ($parsed_note_json->{type} ne 'Feature') {
 		print "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
-		die;
+		exit;
 	}
 	parse_note($parsed_note_json);
 }
 
 if (@regions) {
 	my $fh;
-	open($fh, '<:raw', $regionfile) or die "Region specified, but can't open $regionfile";
+	open($fh, '<:raw', $regionfile) or exit "Region specified, but can't open $regionfile";
 	my $known_regions = do { local $/; decode_json(<$fh>); };
 	close $fh;
 	foreach my $region (@regions) {
-		# TODO: look up region name in the list, add to bboxes if found, error out if not
+		my $matched_region = $known_regions->{$region};
+		if ($matched_region) {
+			push @bboxes, $matched_region;
+		}
+		else {
+			print "Region \"$region\" not found in file \"$regionfile\"\n";
+			exit;
+		}
 	}
 }
 
@@ -173,7 +180,7 @@ foreach my $bbox (@bboxes) {
 	$parsed_note_json = decode_json(get($bboxfinalurl));
 	if ($parsed_note_json->{type} ne 'FeatureCollection') {
 		print "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
-		die;
+		exit;
 	}
 	my $feature_ref   = $parsed_note_json->{features};
 	my $feature_count = @$feature_ref;
