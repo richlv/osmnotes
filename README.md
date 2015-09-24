@@ -30,9 +30,9 @@ perl --topleft "http://www.openstreetmap.org/#map=12/56.9885/24.0940" --bottomri
 
 Bounding box must follow the [OSM notes API](http://wiki.openstreetmap.org/wiki/API_v0.6#Map_Notes_API) syntax of left,bottom,right,top. Multiple bounding boxes can be supplied. If the bounding boxes overlap, notes may appear several times in the output.
 
-Regions are predefined name:bbox pairs, read from a JSON file. Instead of remembering a bbox, specifying topleft and bottomright, one could just do:
+Regions are predefined name:bbox pairs, read from a JSON file. Instead of remembering a bbox or specifying topleft and bottomright, one could just do:
 ```
-perl osmnotes.pl --region latvia:riag
+perl osmnotes.pl --region latvia:riga
 ```
 to get all notes in a region, associated with that name.
 
