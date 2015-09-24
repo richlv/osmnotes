@@ -43,17 +43,16 @@ GetOptions(
     'bottomright=s' => \$bottomright,
     'region|r=s'    => \@regions,
     'help'          => \$help,
-) or exit "Usage:\n$usage";
+) or die "Usage:\n$usage";
 
 if ($help) {
-	exit "Usage:\n$usage";
+	die "Usage:\n$usage";
 }
 
 @note_ids = split(/,/,join(',',@note_ids));
 
 if ($topleft xor $bottomright) {
-	print "If either --topleft or --bottomright is specified, the other must be as well\n";
-	exit;
+	die "If either --topleft or --bottomright is specified, the other must be as well\n";
 }
 
 if ($topleft and $bottomright) {
@@ -67,24 +66,20 @@ if ($topleft and $bottomright) {
 }
 
 if (not @note_ids and not @bboxes and not @regions) {
-	print "Specify some note IDs and/or bounding boxes. Usage:\n$usage";
-	exit;
+	die "Specify some note IDs and/or bounding boxes. Usage:\n$usage";
 }
 
 if ($limit and not @bboxes) {
-	print "Limit specified, but no bounding boxes - only use --limit with at least one --bbox\n";
-	exit;
+	die "Limit specified, but no bounding boxes - only use --limit with at least one --bbox\n";
 }
 
 if ($closed and not @bboxes) {
-	print "Parameter 'closed' specified, but no bounding boxes - only use --closed with at least one --bbox\n";
-	exit;
+	die "Parameter 'closed' specified, but no bounding boxes - only use --closed with at least one --bbox\n";
 }
 
 my $non_integer = first {/\D/} @note_ids;
 if ($non_integer) {
-	print "Non-numeric node ID passed: '$non_integer'\n";
-	exit;
+	die "Non-numeric node ID passed: '$non_integer'\n";
 }
 
 my $final_gpx = XML::LibXML::Document->createDocument($finalgpxversion);
@@ -129,13 +124,11 @@ sub validate_bbox {
 	my @bboxvalues = split(/,/,$bbox_to_validate);
 	my $bboxvalue_count = @bboxvalues;
 	if ($bboxvalue_count != '4') {
-		print "Bounding box '$bbox_to_validate' does not seem to have four comma-delimited parts\n";
-		exit;
+		die "Bounding box '$bbox_to_validate' does not seem to have four comma-delimited parts\n";
 	}
 	foreach my $bboxvalue (@bboxvalues) {
 		if ($bboxvalue !~ /^[+-]?\d+\.?\d*\z/) {
-			print "$bboxvalue does not look like a proper decimal number\n";
-			exit;
+			die "$bboxvalue does not look like a proper decimal number\n";
 		}
 	}
 }
@@ -144,15 +137,14 @@ foreach my $note_id (@note_ids) {
 	$parsed_note_json = decode_json(get($single_note_url . $note_id . ".json"));
 #	print Dumper($parsed_note_json);
 	if ($parsed_note_json->{type} ne 'Feature') {
-		print "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
-		exit;
+		die "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
 	}
 	parse_note($parsed_note_json);
 }
 
 if (@regions) {
 	my $fh;
-	open($fh, '<:raw', $regionfile) or exit "Region specified, but can't open $regionfile";
+	open($fh, '<:raw', $regionfile) or die "Region specified, but can't open $regionfile";
 	my $known_regions = do { local $/; decode_json(<$fh>); };
 	close $fh;
 	foreach my $region (@regions) {
@@ -161,8 +153,7 @@ if (@regions) {
 			push @bboxes, @matched_region;
 		}
 		else {
-			print "Region \"$region\" not found in file \"$regionfile\"\n";
-			exit;
+			die "Region \"$region\" not found in file \"$regionfile\"\n";
 		}
 	}
 }
@@ -180,8 +171,7 @@ foreach my $bbox (@bboxes) {
 	my $bboxfinalurl = $bbox_url . $bbox . $limitstring . $closedstring;
 	$parsed_note_json = decode_json(get($bboxfinalurl));
 	if ($parsed_note_json->{type} ne 'FeatureCollection') {
-		print "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
-		exit;
+		die "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
 	}
 	my $feature_ref   = $parsed_note_json->{features};
 	my $feature_count = @$feature_ref;
