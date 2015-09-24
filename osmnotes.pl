@@ -148,7 +148,8 @@ if (@regions) {
 	my $known_regions = do { local $/; decode_json(<$fh>); };
 	close $fh;
 	foreach my $region (@regions) {
-		my @matched_region = split(/'|'/,$known_regions->{$region});
+		my @matched_region = split(/\|/,$known_regions->{$region});
+		print scalar @matched_region."\n";
 		if (@matched_region) {
 			push @bboxes, @matched_region;
 		}
