@@ -87,8 +87,8 @@ my $gpxroot   = $final_gpx->createElement('gpx');
 $gpxroot->addChild($final_gpx->createAttribute(version => '1.1'));
 $gpxroot->addChild($final_gpx->createAttribute(creator => 'osmnotes.pl'));
 $gpxroot->addChild($final_gpx->createAttribute(xmlns => 'http://www.topografix.com/GPX/1/1'));
-$gpxroot->addChild($final_gpx->createAttribute('xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'));
-$gpxroot->addChild($final_gpx->createAttribute('xsi:schemaLocation' => 'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd'));
+$gpxroot->setNamespace('http://www.w3.org/2001/XMLSchema-instance', 'xsi', 0);
+$gpxroot->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'schemaLocation', 'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd');
 
 sub parse_note {
 	my ($note) = @_;
