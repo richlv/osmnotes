@@ -47,6 +47,7 @@ sub validate_bbox {
 			die "$bboxvalue does not look like a proper decimal number\n";
 		}
 	}
+	return 1;
 }
 
 sub run {
