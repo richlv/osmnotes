@@ -20,17 +20,12 @@ sub parse_note {
 	$osmnote{parsed_nodeid} = $note->{properties}->{id};
 	my $note_comments       = $note->{properties}->{comments};
 	my $note_comment_count  = @$note_comments;
-	foreach (my $commentid = 0; $commentid <$note_comment_count; $commentid++ ) {
-		my $comment_date   = $note->{properties}->{comments}[$commentid]->{date};
-		my $comment_user   = $note->{properties}->{comments}[$commentid]->{user};
-		my $comment_text   = $note->{properties}->{comments}[$commentid]->{text};
-		my $comment_action = $note->{properties}->{comments}[$commentid]->{action};
-		if (! $comment_user) {
-			$comment_user = 'Anon';
-		}
-		$osmnote{desc} .= "$comment_date ";
-		$osmnote{desc} .= "[$comment_action] $comment_user: ";
-		$osmnote{desc} .= "$comment_text\n";
+	foreach my $comment (@{$note->{properties}{comments}}) {
+		# OSM usernames have minimum length limit of 3, this should not trip on 0
+		my $comment_user = $comment->{user} || 'Anon';
+		$osmnote{desc} .= "$comment->{date} ";
+		$osmnote{desc} .= "[$comment->{action}] $comment_user: ";
+		$osmnote{desc} .= "$comment->{text}\n";
 	}
 	return \%osmnote;
 }
