@@ -18,8 +18,6 @@ sub parse_note {
 	$osmnote{lon}           = $note->{geometry}->{coordinates}[0];
 	$osmnote{lat}           = $note->{geometry}->{coordinates}[1];
 	$osmnote{parsed_nodeid} = $note->{properties}->{id};
-	my $note_comments       = $note->{properties}->{comments};
-	my $note_comment_count  = @$note_comments;
 	foreach my $comment (@{$note->{properties}{comments}}) {
 		# OSM usernames have minimum length limit of 3, this should not trip on 0
 		my $comment_user = $comment->{user} || 'Anon';
@@ -185,11 +183,7 @@ USAGE
 		if ($parsed_note_json->{type} ne 'FeatureCollection') {
 			die "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
 		}
-		my $feature_ref   = $parsed_note_json->{features};
-		my $feature_count = @$feature_ref;
-		#print "found $feature_count features/notes\n";
-		foreach (my $featureid = 0; $featureid < $feature_count; $featureid++ ) {
-			my $note = $parsed_note_json->{features}[$featureid];
+		foreach my $note (@{$parsed_note_json->{features}}) {
 			my $osmnote = parse_note($note);
 			add_waypoint($osmnote, $final_gpx, $gpxroot);
 		}
