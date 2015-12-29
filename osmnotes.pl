@@ -188,7 +188,16 @@ USAGE
 		#print "found $feature_count features/notes\n";
 		foreach (my $featureid = 0; $featureid < $feature_count; $featureid++ ) {
 			my $note = $parsed_note_json->{features}[$featureid];
-			parse_note($note);
+			my $osmnote = parse_note($note);
+
+			my $new_wpt = $final_gpx->createElement('wpt');
+			$new_wpt->addChild($final_gpx->createAttribute(lat => $osmnote->{lat}));
+			$new_wpt->addChild($final_gpx->createAttribute(lon => $osmnote->{lon}));
+			my $note_name = "OSM note $osmnote->{parsed_nodeid}";
+			$new_wpt->appendTextChild('name', $note_name);
+			# garmin oregon 650 does not support 'desc', only 'cmt'
+			$new_wpt->appendTextChild('cmt', $osmnote->{desc});
+			$new_wpt = $gpxroot->appendChild($new_wpt);
 		}
 	}
 
