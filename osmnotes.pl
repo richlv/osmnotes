@@ -50,6 +50,21 @@ sub validate_bbox {
 	return 1;
 }
 
+sub add_waypoint {
+	my $osmnote = shift;
+	my $final_gpx = shift;
+	my $gpxroot = shift;
+
+	my $new_wpt = $final_gpx->createElement('wpt');
+	$new_wpt->addChild($final_gpx->createAttribute(lat => $osmnote->{lat}));
+	$new_wpt->addChild($final_gpx->createAttribute(lon => $osmnote->{lon}));
+	my $note_name = "OSM note $osmnote->{parsed_nodeid}";
+	$new_wpt->appendTextChild('name', $note_name);
+	# garmin oregon 650 does not support 'desc', only 'cmt'
+	$new_wpt->appendTextChild('cmt', $osmnote->{desc});
+	$new_wpt = $gpxroot->appendChild($new_wpt);
+}
+
 sub run {
 	my $single_note_url = 'http://api.openstreetmap.org/api/0.6/notes/';
 	my $bbox_url        = 'http://api.openstreetmap.org/api/0.6/notes.json?bbox=';
@@ -140,15 +155,7 @@ USAGE
 			die "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
 		}
 		my $osmnote = parse_note($parsed_note_json);
-
-		my $new_wpt = $final_gpx->createElement('wpt');
-		$new_wpt->addChild($final_gpx->createAttribute(lat => $osmnote->{lat}));
-		$new_wpt->addChild($final_gpx->createAttribute(lon => $osmnote->{lon}));
-		my $note_name = "OSM note $osmnote->{parsed_nodeid}";
-		$new_wpt->appendTextChild('name', $note_name);
-		# garmin oregon 650 does not support 'desc', only 'cmt'
-		$new_wpt->appendTextChild('cmt', $osmnote->{desc});
-		$new_wpt = $gpxroot->appendChild($new_wpt);
+		add_waypoint($osmnote, $final_gpx, $gpxroot);
 	}
 
 	if (@regions) {
@@ -189,15 +196,7 @@ USAGE
 		foreach (my $featureid = 0; $featureid < $feature_count; $featureid++ ) {
 			my $note = $parsed_note_json->{features}[$featureid];
 			my $osmnote = parse_note($note);
-
-			my $new_wpt = $final_gpx->createElement('wpt');
-			$new_wpt->addChild($final_gpx->createAttribute(lat => $osmnote->{lat}));
-			$new_wpt->addChild($final_gpx->createAttribute(lon => $osmnote->{lon}));
-			my $note_name = "OSM note $osmnote->{parsed_nodeid}";
-			$new_wpt->appendTextChild('name', $note_name);
-			# garmin oregon 650 does not support 'desc', only 'cmt'
-			$new_wpt->appendTextChild('cmt', $osmnote->{desc});
-			$new_wpt = $gpxroot->appendChild($new_wpt);
+			add_waypoint($osmnote, $final_gpx, $gpxroot);
 		}
 	}
 
