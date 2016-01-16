@@ -105,14 +105,13 @@ USAGE
 	if ($topleft xor $bottomright) {
 		die "If either --topleft or --bottomright is specified, the other must be as well\n";
 	}
-
 	if ($topleft and $bottomright) {
 		# from osm urls, generate and add a bounding box
 		my ($top, $left, $bottom, $right);
 		($top = $topleft) =~ s/.*#map=[0-9]+\/([0-9]+(\.[0-9]+)?).*/$1/;
-		($left = $topleft) =~ s/.*#map=[0-9]+\/[0-9]+(?:\.[0-9]+)?\/([0-9]+(\.[0-9]+)?).*/$1/;
+		($left = $topleft) =~ s/.*#map=[0-9]+\/[0-9]+(?:\.[0-9]+)?\/(-*[0-9]+(\.[0-9]+)?).*/$1/;
 		($bottom = $bottomright) =~ s/.*#map=[0-9]+\/([0-9]+(\.[0-9]+)?).*/$1/;
-		($right = $bottomright) =~ s/.*#map=[0-9]+\/[0-9]+(?:\.[0-9]+)?\/([0-9]+(\.[0-9]+)?).*/$1/;
+		($right = $bottomright) =~ s/.*#map=[0-9]+\/[0-9]+(?:\.[0-9]+)?\/(-*[0-9]+(\.[0-9]+)?).*/$1/;
 		push @bboxes, "$left,$bottom,$right,$top";
 	}
 
