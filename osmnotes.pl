@@ -85,6 +85,8 @@ USAGE
 	my ($limit, $closed);
 	my ($topleft, $bottomright);
 	my $help;
+	# the default osm limit - should be maintained and should match the actual limit on the API side
+	my $osmlimit = 100;
 	GetOptions(
 		'noteid|n=s'    => \@note_ids,
 		'bbox|b=s'      => \@bboxes,
@@ -181,6 +183,20 @@ USAGE
 		$parsed_note_json = decode_json(get($bboxfinalurl));
 		if ($parsed_note_json->{type} ne 'FeatureCollection') {
 			die "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
+		}
+		# both direct bbox and topleft/lowerright will end up here
+		# they both could have hit the specified or osm default limit - check it here and warn user if so
+		# we don't guard against getting more notes than expected - should we ?
+		my $received_note_count = scalar(@{$parsed_note_json->{features}});
+		if ($limit) {
+			if ($received_note_count == $limit) {
+				print STDERR "WARNING: received a limit of $limit issues - some issues probably not downloaded\n";
+			}
+		}
+		else {
+			if ($received_note_count == $osmlimit) {
+				print STDERR "WARNING: received a limit of the default $osmlimit issues - some issues probably not downloaded\n";
+			}
 		}
 		foreach my $note (@{$parsed_note_json->{features}}) {
 			my $osmnote = parse_note($note);
