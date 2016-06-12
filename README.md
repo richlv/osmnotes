@@ -26,7 +26,7 @@ Specifying top left and bottom right corners can be done by passing nearly any O
 perl --topleft "http://www.openstreetmap.org/#map=12/56.9885/24.0940" --bottomright "http://www.openstreetmap.org/#map=12/56.8738/24.3890"
 ```
 
-"Closed" specifies for how many days a note may be closed to still show it. OSM API default is 7. Setting it to 0 will not include closed notes. Setting it to -1 will include all notes, no matter how long ago they were closed.
+"Closed" specifies for how many days a note may be closed to still show it. OSM API default is 7. Setting it to 0 will not include closed notes. Setting it to -1 will include all notes, no matter how long ago they were closed. Setting it to 'only' will return closed notes only.
 
 Bounding box must follow the [OSM notes API](http://wiki.openstreetmap.org/wiki/API_v0.6#Map_Notes_API) syntax of left,bottom,right,top. Multiple bounding boxes can be supplied. If the bounding boxes overlap, notes may appear several times in the output.
 
