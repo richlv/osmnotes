@@ -17,7 +17,7 @@ sub parse_note {
 	my %osmnote;
 	$osmnote{lon}           = $note->{geometry}->{coordinates}[0];
 	$osmnote{lat}           = $note->{geometry}->{coordinates}[1];
-	$osmnote{parsed_nodeid} = $note->{properties}->{id};
+	$osmnote{parsed_noteid} = $note->{properties}->{id};
 	foreach my $comment (@{$note->{properties}{comments}}) {
 		# OSM usernames have minimum length limit of 3, this should not trip on 0
 		my $comment_user = $comment->{user} || 'Anon';
@@ -51,7 +51,7 @@ sub add_waypoint {
 	my $new_wpt = $final_gpx->createElement('wpt');
 	$new_wpt->addChild($final_gpx->createAttribute(lat => $osmnote->{lat}));
 	$new_wpt->addChild($final_gpx->createAttribute(lon => $osmnote->{lon}));
-	my $note_name = "OSM note $osmnote->{parsed_nodeid}";
+	my $note_name = "OSM note $osmnote->{parsed_noteid}";
 	$new_wpt->appendTextChild('name', $note_name);
 	# garmin oregon 650 does not support 'desc', only 'cmt'
 	$new_wpt->appendTextChild('cmt', $osmnote->{desc});
@@ -131,7 +131,7 @@ USAGE
 
 	my $non_integer = first {/\D/} @note_ids;
 	if ($non_integer) {
-		die "Non-numeric node ID passed: '$non_integer'\n";
+		die "Non-numeric note ID passed: '$non_integer'\n";
 	}
 
 	my $final_gpx = XML::LibXML::Document->createDocument($finalgpxversion);
