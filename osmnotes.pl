@@ -9,6 +9,7 @@ use XML::LibXML;
 use JSON::XS;
 use Getopt::Long qw(GetOptions);
 use List::Util 'first';
+use Scalar::Util qw(looks_like_number);
 
 run() unless caller;
 
@@ -18,6 +19,7 @@ sub parse_note {
 	$osmnote{lon}           = $note->{geometry}->{coordinates}[0];
 	$osmnote{lat}           = $note->{geometry}->{coordinates}[1];
 	$osmnote{parsed_noteid} = $note->{properties}->{id};
+	$osmnote{status}        = $note->{properties}->{status};
 	foreach my $comment (@{$note->{properties}{comments}}) {
 		# OSM usernames have minimum length limit of 3, this should not trip on 0
 		my $comment_user = $comment->{user} || 'Anon';
@@ -68,7 +70,7 @@ $0 --noteid ID,ID,ID --noteid ID
 $0 --noteid ID,ID,ID --bbox BBOX --bbox BBOX --limit LIMIT --closed CLOSED --topleft "TOPLEFT_MAPURL" --bottomright "BOTTOMRIGHT_MAPURL" --region REGION
   * bbox: bounding box using format left,bottom,right,top
   * limit: maximum number of notes. OSM default - 100
-  * closed: for how long a note may be closed to still include it. OSM default - 7. 0 - do not include closed notes. -1 - inlude all closed notes
+  * closed: for how long a note may be closed to still include it. OSM default - 7. 0 - do not include closed notes. -1 - inlude all closed notes. "only" - include only closed notes
   * topleft, bottomright: OSM URL of the top left and bottom right corner of the desired bounding box, correspondingly
   * region: a predefined region from $regionfile
 USAGE
@@ -91,7 +93,7 @@ USAGE
 		'noteid|n=s'    => \@note_ids,
 		'bbox|b=s'      => \@bboxes,
 		'limit|l=i'     => \$limit,
-		'closed|c=i'    => \$closed,
+		'closed|c=s'    => \$closed,
 		'topleft=s'     => \$topleft,
 		'bottomright=s' => \$bottomright,
 		'region|r=s'    => \@regions,
@@ -129,9 +131,9 @@ USAGE
 		die "Parameter 'closed' specified, but no bounding boxes - only use --closed with at least one --bbox\n";
 	}
 
-	my $non_integer = first {/\D/} @note_ids;
-	if ($non_integer) {
-		die "Non-numeric note ID passed: '$non_integer'\n";
+	my $non_integer_noteid = first {/\D/} @note_ids;
+	if ($non_integer_noteid) {
+		die "Non-numeric note ID passed: '$non_integer_noteid'\n";
 	}
 
 	my $final_gpx = XML::LibXML::Document->createDocument($finalgpxversion);
@@ -144,7 +146,6 @@ USAGE
 
 	foreach my $note_id (@note_ids) {
 		$parsed_note_json = decode_json(get($single_note_url . $note_id . ".json"));
-		#print Dumper($parsed_note_json);
 		if ($parsed_note_json->{type} ne 'Feature') {
 			die "ERROR: Incoming JSON type not 'FeatureCollection', stopping\n";
 		}
@@ -174,7 +175,19 @@ USAGE
 	}
 
 	if (defined $closed) {
-		$closedstring = "&closed=$closed";
+		if (looks_like_number($closed)) {
+			if ($closed != int($closed) or $closed < -1) {
+				die "Numeric parameter 'closed' passed that's not an integer or is smaller than -1\n";
+			}
+			else {
+				$closedstring = "&closed=$closed";
+			}
+		}
+		else {
+			unless ($closed eq 'only') {
+				die "Non-numeric parameter 'closed' passed that is not 'only'\n";
+			}
+		}
 	}
 
 	foreach my $bbox (@bboxes) {
@@ -200,7 +213,9 @@ USAGE
 		}
 		foreach my $note (@{$parsed_note_json->{features}}) {
 			my $osmnote = parse_note($note);
-			add_waypoint($osmnote, $final_gpx, $gpxroot);
+			unless ($closed eq 'only' and $osmnote->{status} eq 'open') {
+				add_waypoint($osmnote, $final_gpx, $gpxroot);
+			}
 		}
 	}
 
