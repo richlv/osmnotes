@@ -7,7 +7,7 @@ use LWP::Simple;
 use XML::LibXML;
 #use Data::Dumper;
 use JSON::XS;
-use Getopt::Long qw(GetOptions);
+use Getopt::Long qw(GetOptions :config no_auto_abbrev no_ignore_case_always bundling);
 use List::Util 'first';
 use Scalar::Util qw(looks_like_number);
 
@@ -213,7 +213,7 @@ USAGE
 		}
 		foreach my $note (@{$parsed_note_json->{features}}) {
 			my $osmnote = parse_note($note);
-			unless ($closed eq 'only' and $osmnote->{status} eq 'open') {
+			unless (defined $closed and $closed eq 'only' and $osmnote->{status} eq 'open') {
 				add_waypoint($osmnote, $final_gpx, $gpxroot);
 			}
 		}
